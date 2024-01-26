@@ -2,6 +2,7 @@
 
 import random
 from datetime import datetime
+import csv
 
 now = datetime.now()
 
@@ -19,16 +20,24 @@ DB_Log = [['transId', 'tableId' ,'Attribute', 'ValueBefore', 'valueAfter', 'time
 '''
 DB_Log = [] # <-- You WILL populate this as you go
 
-def recovery_script(log:list, indx: int):  #<--- Your CODE
+def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
     '''
     Restore the database to stable and sound condition, by processing the DB log.
     '''
     print("Calling your recovery script with DB_Log as an argument.")
-    
     if(indx != None):
         print("Recovery in process ...\n")
         log[indx - 1][6] = 'Rolledback'
-        
+        id = int(log[indx - 1][1])
+        attr = log[indx - 1][2]
+        print(attr)
+        oldVal = log[indx - 1][3]
+        col = 0
+        for i in database[0]: #finds the col of the attribute to be updated
+            if(i == attr):
+                break
+            col += 1
+        database[id][col] = oldVal
     else:
         print("No Rollback nessesary.")
     
@@ -91,10 +100,9 @@ def is_there_a_failure()->bool:
 def main():
     number_of_transactions = len(transactions)
     must_recover = False
-    data_base = read_file('Employees_DB_ADV.csv') #If this is not reading from the file then I nedd to open the folder that the file is located in since vscode is a little stupid.
+    data_base = read_file('Employees_DB_ADV.csv') #If this is not reading from the file then I need to open the folder that the file is located in since vscode is a little stupid.
     failure = is_there_a_failure()
     failing_transaction_index = None
-    
     while not failure:
         # Process transaction
         for index in range(number_of_transactions):
@@ -113,7 +121,7 @@ def main():
                 
     if must_recover:
         #Call your recovery script
-        recovery_script(DB_Log, failing_transaction_index) ### Call the recovery function to restore DB to sound state
+        recovery_script(DB_Log, failing_transaction_index, data_base) ### Call the recovery function to restore DB to sound state
     else:
         # All transactiones ended up well
         print("All transaction ended up well.")
