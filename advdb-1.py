@@ -43,6 +43,14 @@ def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
     
     pass
 
+def printToCSV(fileName: str, array:list):
+    with open(fileName, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter='\n', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
+        if(fileName == "log.csv"):
+            writer.writerow(["transId,tableId,Attribute,valueBefore,valueAfter,timeStamp,committed/rolledback/neverExecuted"])
+       
+        writer.writerow(array)
+
 def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
     '''
     1. Process transaction in the transaction queue.
@@ -102,23 +110,28 @@ def main():
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv') #If this is not reading from the file then I need to open the folder that the file is located in since vscode is a little stupid.
     failure = is_there_a_failure()
+    #failure = False
     failing_transaction_index = None
-    while not failure:
+    while (not failure and number_of_transactions != 0): 
         # Process transaction
-        for index in range(number_of_transactions):
+        for index in range(number_of_transactions): #This will go over the transaction list multiple times if there is never a failure
             print(f"\nProcessing transaction No. {index+1}.")   
             #<--- Your CODE (Call function transaction_processing)
             transaction_processing(index, data_base, DB_Log)
             print("UPDATES have not been committed yet...\n")
             failure = is_there_a_failure()
+            number_of_transactions -= 1
             if failure:
                 must_recover = True
                 failing_transaction_index = index + 1
                 print(f'There was a failure whilst processing transaction No. {failing_transaction_index}.')
                 break
+            elif number_of_transactions == 0:
+                break
             else:
-                print(f'Transaction No. {index+1} has been commited! Changes are permanent.')
-                
+                print(f'Transaction No. {index+1} has been commited! Changes are permanent.') 
+        if(number_of_transactions == 0):
+            break        
     if must_recover:
         #Call your recovery script
         recovery_script(DB_Log, failing_transaction_index, data_base) ### Call the recovery function to restore DB to sound state
@@ -133,7 +146,8 @@ def main():
     print("\nDB_log")
     for i in DB_Log:
         print(i)
-    
+    printToCSV("log.csv", DB_Log)
+    printToCSV("Updated_Employees_DB_ADV.csv", data_base)
 main()
 
 

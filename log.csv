@@ -1,0 +1,4 @@
+transId,tableId,Attribute,valueBefore,valueAfter,timeStamp,committed/rolledback/neverExecuted
+ [0,  1,  'Department',  'Projects',  'Music',  '14:54:43',  'Committed'] 
+ [1,  5,  'Civil_status',  'Married',  'Divorced',  '14:54:43',  'Committed'] 
+ [2,  15,  'Salary',  '321000',  '200000',  '14:54:43',  'Rolledback'] 
