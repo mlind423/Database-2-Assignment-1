@@ -8,7 +8,7 @@ now = datetime.now()
 
 current_time = now.strftime("%H:%M:%S")
 
-data_base = []  # Global binding for the Database contents
+
 '''
 transactions = [['id1',' attribute2', 'value1'], ['id2',' attribute2', 'value2'],
                 ['id3', 'attribute3', 'value3']]
@@ -20,18 +20,18 @@ DB_Log = [['transId', 'tableId' ,'Attribute', 'ValueBefore', 'valueAfter', 'time
 '''
 DB_Log = [] # <-- You WILL populate this as you go
 
-def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
+def recovery_script(log:list, indx:int, database:list):  #<--- Your CODE
     '''
     Restore the database to stable and sound condition, by processing the DB log.
     '''
     print("Calling your recovery script with DB_Log as an argument.")
     if(indx != None):
         print("Recovery in process ...\n")
-        log[indx - 1][6] = 'Rolledback'
-        id = int(log[indx - 1][1])
-        attr = log[indx - 1][2]
+        log[indx][6] = 'Rolledback'
+        id = int(log[indx][1])
+        attr = log[indx][2]
         print(attr)
-        oldVal = log[indx - 1][3]
+        oldVal = log[indx][3]
         col = 0
         for i in database[0]: #finds the col of the attribute to be updated
             if(i == attr):
@@ -43,13 +43,15 @@ def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
     
     pass
 
-def printToCSV(fileName: str, array:list):
+def printToCSV(fileName: str, array: list):
     with open(fileName, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter='\n', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-        if(fileName == "log.csv"):
-            writer.writerow(["transId,tableId,Attribute,valueBefore,valueAfter,timeStamp,committed/rolledback/neverExecuted"])
-       
-        writer.writerow(array)
+        writer = csv.writer(csvfile, quotechar=',', quoting=csv.QUOTE_MINIMAL)
+        if fileName == "log.csv":
+            writer.writerow(["transId", "tableId", "Attribute", "valueBefore", "valueAfter", "timeStamp", "committed/rolledback/neverExecuted"])
+
+        for row in array:
+            writer.writerow([str(item) for item in row])
+
 
 def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
     '''
@@ -115,7 +117,8 @@ def main():
     while (not failure and number_of_transactions != 0): 
         # Process transaction
         for index in range(number_of_transactions): #This will go over the transaction list multiple times if there is never a failure
-            print(f"\nProcessing transaction No. {index+1}.")   
+            transaction_index = index+1
+            print(f"\nProcessing transaction No. {transaction_index}.")   
             #<--- Your CODE (Call function transaction_processing)
             transaction_processing(index, data_base, DB_Log)
             print("UPDATES have not been committed yet...\n")
@@ -123,18 +126,17 @@ def main():
             number_of_transactions -= 1
             if failure:
                 must_recover = True
-                failing_transaction_index = index + 1
-                print(f'There was a failure whilst processing transaction No. {failing_transaction_index}.')
+                print(f'There was a failure whilst processing transaction No. {transaction_index}.')
                 break
             elif number_of_transactions == 0:
                 break
             else:
-                print(f'Transaction No. {index+1} has been commited! Changes are permanent.') 
+                print(f'Transaction No. {transaction_index} has been commited! Changes are permanent.') 
         if(number_of_transactions == 0):
             break        
     if must_recover:
         #Call your recovery script
-        recovery_script(DB_Log, failing_transaction_index, data_base) ### Call the recovery function to restore DB to sound state
+        recovery_script(DB_Log, index, data_base) ### Call the recovery function to restore DB to sound state
     else:
         # All transactiones ended up well
         print("All transaction ended up well.")
