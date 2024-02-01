@@ -20,11 +20,29 @@ DB_Log = [['transId', 'tableId' ,'Attribute', 'ValueBefore', 'valueAfter', 'time
 '''
 DB_Log = [] # <-- You WILL populate this as you go
 
+def populate_loglist_failed(log:list, indx: int, database:list):
+    if indx == None:
+        indx = 0
+    while indx < len(transactions):
+        id: int = int(transactions[indx][0])
+        attr = transactions[indx][1]
+        newVal = transactions[indx][2]
+        col: int = 0
+        for i in database[0]: #finds the col of the attribute to be updated
+            if(i == attr):
+                break
+            col += 1
+        log.append([indx, id, attr, database[id][col], newVal, current_time, "Did not run"])
+        indx +=1
+    
+
+
 def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
     '''
     Restore the database to stable and sound condition, by processing the DB log.
     '''
     print("Calling your recovery script with DB_Log as an argument.")
+    populate_loglist_failed(DB_Log, indx, database)
     if(indx != None):
         print("Recovery in process ...\n")
         log[indx - 1][6] = 'Rolledback'
@@ -102,13 +120,17 @@ def main():
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv') #If this is not reading from the file then I need to open the folder that the file is located in since vscode is a little stupid.
     failure = is_there_a_failure()
+    if failure:
+        must_recover = True
     failing_transaction_index = None
-    while not failure:
+    current_transaction_num = 0
+    while (not failure and (current_transaction_num < number_of_transactions)):
         # Process transaction
         for index in range(number_of_transactions):
             print(f"\nProcessing transaction No. {index+1}.")   
             #<--- Your CODE (Call function transaction_processing)
             transaction_processing(index, data_base, DB_Log)
+            current_transaction_num += 1
             print("UPDATES have not been committed yet...\n")
             failure = is_there_a_failure()
             if failure:
