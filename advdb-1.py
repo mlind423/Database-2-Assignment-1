@@ -1,3 +1,6 @@
+# This code does not populate log.csv when transactions are 100% committed more often than it does, the rest of the functionality works 
+# Code is meh on transaction_not_executed function wrote this prior to push to Main on Feb 2, 2024 can be improved upon/restructured
+
 # Adv DB Winter 2024 - 1
 
 import random
@@ -41,9 +44,10 @@ def recovery_script(log:list, indx:int, database:list):  #<--- Your CODE
     else:
         print("No Rollback nessesary.")
     
+
     pass
 
-def printToCSV(fileName: str, array: list):
+def printToCSV(fileName: str, array: list, unexe: list, valid: bool):
     with open(fileName, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, quotechar=',', quoting=csv.QUOTE_MINIMAL)
         if fileName == "log.csv":
@@ -51,6 +55,12 @@ def printToCSV(fileName: str, array: list):
 
         for row in array:
             writer.writerow([str(item) for item in row])
+
+        if(valid):
+            if(unexe != None):
+                for row in unexe:
+                    writer.writerow([str(item) for item in row])
+
 
 
 def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
@@ -70,7 +80,60 @@ def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
     log.append([indx, id, attr, database[id][col], newVal, current_time, "Committed"]) #assumes the transaction completes with no errors but the last value will change if the transaction fails
     database[id][col] = newVal #updates the database list in mainMemory (this will be changed if an error occurs during the transaction)
     pass
+
+def transaction_not_executed(transaction_list: list, db_log: list, database: list) -> list:
+    '''
+    Grab Unprocessed Transactions
+    '''
+    unexecuted_transactions = []
+    index = 0
+
+    if(len(db_log) == 3):
+        index = -1
+    elif(len(db_log) == 2):
+        index = 2
+    else:
+        index = 1
     
+    if(index == 2):
+        value_before = database[15][3]
+        value_after = transaction_list[index][index]
+        id = database[15][0]
+        attr = transaction_list[index][1]
+        unexecuted_transactions.append([index, id, attr, value_before, value_after, current_time, "NeverExcuted"])
+    elif(index == 1):
+        first_val_before = database[5][5]
+        first_val_after = transaction_list[index][2]
+        first_id = database[5][0]
+        first_attr = transaction_list[index][1]
+        second_val_before = database[15][3]
+        second_value_after = transaction_list[2][2]
+        second_id = database[15][0]
+        second_attr = transaction_list[2][1]
+        unexecuted_transactions.append([index, first_id, first_attr, first_val_before, first_val_after, current_time, "NeverExcuted"])
+        unexecuted_transactions.append([index+1, second_id, second_attr, second_val_before, second_value_after, current_time, "NeverExcuted"])
+    elif(index == 0): #Ive never been able to excercise this one in my tests
+        first_val_before = database[1][4]
+        first_val_after = transaction_list[index][2]
+        first_id = database[1][0]
+        first_attr = [index][1]
+        second_val_before = database[5][5]
+        second_val_after = transaction_list[index][2]
+        second_id = database[5][0]
+        second_attr = transaction_list[index][1]
+        third_val_before = database[15][3]
+        third_val_after = transaction_list[2][2]
+        third_id = database[15][0]
+        third_attr = transaction_list[2][1]
+        unexecuted_transactions.append([index, first_id, first_attr, first_val_before, first_val_after, current_time, "NeverExcuted"])
+        unexecuted_transactions.append([index+1, second_id, second_attr, second_val_before, second_val_after, current_time, "NeverExcuted"])
+        unexecuted_transactions.append([index+2, third_id, third_attr, third_val_before, third_val_after, current_time, "NeverExcuted"])
+    else:
+        unexecuted_transactions = None
+
+    return unexecuted_transactions
+
+
 
 def read_file(file_name:str)->list:
     '''
@@ -114,6 +177,7 @@ def main():
     failure = is_there_a_failure()
     #failure = False
     failing_transaction_index = None
+    after_failure = None
     while (not failure and number_of_transactions != 0): 
         # Process transaction
         for index in range(number_of_transactions): #This will go over the transaction list multiple times if there is never a failure
@@ -136,7 +200,8 @@ def main():
             break        
     if must_recover:
         #Call your recovery script
-        recovery_script(DB_Log, index, data_base) ### Call the recovery function to restore DB to sound state
+        after_failure = transaction_not_executed(transactions, DB_Log, data_base)
+        recovery_script(DB_Log, index, data_base,) ### Call the recovery function to restore DB to sound state
     else:
         # All transactiones ended up well
         print("All transaction ended up well.")
@@ -148,8 +213,11 @@ def main():
     print("\nDB_log")
     for i in DB_Log:
         print(i)
-    printToCSV("log.csv", DB_Log)
-    printToCSV("Updated_Employees_DB_ADV.csv", data_base)
+    if(after_failure != None):
+        for i in after_failure:
+            print(i)
+    printToCSV("log.csv", DB_Log, after_failure, True)
+    printToCSV("Updated_Employees_DB_ADV.csv", data_base, after_failure, False)
 main()
 
 
