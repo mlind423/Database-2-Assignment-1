@@ -1,0 +1,4 @@
+transId,tableId,Attribute,valueBefore,valueAfter,timeStamp,committed/rolledback/neverExecuted
+0,1,Department,Projects,Music,18:31:44,Committed
+1,5,Civil_status,Married,Divorced,18:31:44,Rolledback
+2,15,Salary,321000,200000,18:31:44,NeverExecuted

@@ -32,7 +32,7 @@ def populate_loglist_failed(log:list, indx: int, database:list):
             if(i == attr):
                 break
             col += 1
-        log.append([indx, id, attr, database[id][col], newVal, current_time, "Did not run"])
+        log.append([indx, id, attr, database[id][col], newVal, current_time, "NeverExecuted"])
         indx +=1
     
 
@@ -59,6 +59,16 @@ def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
     else:
         print("No Rollback nessesary.")
     
+    pass
+
+def print_to_CSV(fileName: str, array: list):
+    with open(fileName, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, quotechar=',', quoting=csv.QUOTE_MINIMAL)
+        if fileName == "log.csv":
+            writer.writerow(["transId", "tableId", "Attribute", "valueBefore", "valueAfter", "timeStamp", "committed/rolledback/neverExecuted"])
+
+        for row in array:
+            writer.writerow([str(item) for item in row])
     pass
 
 def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
@@ -155,7 +165,10 @@ def main():
     print("\nDB_log")
     for i in DB_Log:
         print(i)
-    
+    print_to_CSV("log.csv", DB_Log)
+    print_to_CSV("Updated_Employees_DB_ADV.csv", data_base)
+
+
 main()
 
 
