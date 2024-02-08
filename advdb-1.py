@@ -4,6 +4,14 @@ import random
 from datetime import datetime
 import csv
 
+'''
+I had to correct a few unintentional behaviours in the original code, you'll see a counter to escape from the normal recording 
+once all transactions have been recorded. Additionally, Failing before any transactions now properly calls recovery_script.
+'''
+
+
+
+
 now = datetime.now()
 
 current_time = now.strftime("%H:%M:%S")
@@ -20,7 +28,13 @@ DB_Log = [['transId', 'tableId' ,'Attribute', 'ValueBefore', 'valueAfter', 'time
 '''
 DB_Log = [] # <-- You WILL populate this as you go
 
+
+# This populates the DB_Log with the transactions that will not run after the failing transaction
 def populate_loglist_failed(log:list, indx: int, database:list):
+    '''
+    This populates the DB_Log with the transactions that will not run after the failing transaction
+    '''
+
     if indx == None:
         indx = 0
     while indx < len(transactions):
@@ -28,7 +42,7 @@ def populate_loglist_failed(log:list, indx: int, database:list):
         attr = transactions[indx][1]
         newVal = transactions[indx][2]
         col: int = 0
-        for i in database[0]: #finds the col of the attribute to be updated
+        for i in database[0]:
             if(i == attr):
                 break
             col += 1
