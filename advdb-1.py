@@ -1,16 +1,21 @@
-# Adv DB Winter 2024 - 1
+"""
+Adv DB Winter 2024 - A1
 
+Authors:
+- Matthew Lindstrom
+- Spencer Reid
+- Justin Savenko
+
+Version: 1.3.2 (Final Version)
+
+This script simulates a conceptual logging and rollback system for a simple RDBMS
+database. It is designed to be used with the provided Employees_DB_ADV.csv file,
+which contains employee information including their ID, name, department, salary,
+and civil status.
+"""
 import random
 from datetime import datetime
 import csv
-
-'''
-I had to correct a few unintentional behaviours in the original code, you'll see a counter to escape from the normal recording 
-once all transactions have been recorded. Additionally, Failing before any transactions now properly calls recovery_script.
-'''
-
-
-
 
 now = datetime.now()
 
@@ -27,12 +32,23 @@ transactions = [['1', 'Department', 'Music'], ['5', 'Civil_status', 'Divorced'],
 DB_Log = [['transId', 'tableId' ,'Attribute', 'ValueBefore', 'valueAfter', 'timeStamp', 'committed/rolledback/neverExecuted']
 '''
 DB_Log = [] # <-- You WILL populate this as you go
+log_string = "log.csv" # Global Binding String Variable for File output
+database_string = "Updated_Employees_DB_ADV.csv" # Global Binding String Variable for File output
 
 
-# This populates the DB_Log with the transactions that will not run after the failing transaction
 def populate_loglist_failed(log:list, indx: int, database:list):
     '''
     This populates the DB_Log with the transactions that will not run after the failing transaction
+    and appends them to the log list
+
+    Parameters:
+    - log (list): the log list to append too and to identify what transactions never got executed
+    - indx (int): the index value of the list
+    - database (list): the original database
+
+    Example:
+    --------
+    populate_loglist_failed(DB_Log, indx, database)
     '''
     if indx == None:
         indx = 0
@@ -53,6 +69,15 @@ def populate_loglist_failed(log:list, indx: int, database:list):
 def recovery_script(log:list, indx: int, database:list):
     '''
     Restore the database to stable and sound condition, by processing the DB log.
+
+    Parameters:
+    - log (list): This is a list of the log entries that will be processed to recover the database
+    - indx (int): Index value of the list
+    - database (list): The original data base before any errors were introduced
+
+    Example:
+    --------
+    recovery_script(DB_Log, failing_transaction_index, data_base)
     '''
     print("Calling your recovery script with DB_Log as an argument.")
     populate_loglist_failed(DB_Log, indx, database)
@@ -76,9 +101,20 @@ def recovery_script(log:list, indx: int, database:list):
     pass
 
 def print_to_CSV(fileName: str, array: list):
+    """
+    File output method that is used to output the log and new database into a CSV file
+
+    Parameters:
+    - fileName (str): Name of the file you want to save the data to.
+    - array (list): A list containing all of the information that needs to pushed to the output file
+
+    Example:
+    --------
+    print_to_CSV("cool_file_name.csv", DB_Log)
+    """
     with open(fileName, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, quotechar=',', quoting=csv.QUOTE_MINIMAL)
-        if fileName == "log.csv":
+        if fileName == log_string: # Write the log header as the log does not contain a header within the list
             writer.writerow(["transId", "tableId", "Attribute", "valueBefore", "valueAfter", "timeStamp", "committed/rolledback/neverExecuted"])
 
         for row in array:
@@ -86,6 +122,19 @@ def print_to_CSV(fileName: str, array: list):
     pass
 
 def transaction_processing(indx: int, database: list, log: list):
+    """
+    Transaction processing method used to update the database as long as no failure is simulated
+    and updates the database main memory accordingly to the transaction details
+
+    Parameters:
+    - indx (int): The index number of the current operation within the operations list.
+    - database (list): The actual database which will be modified by this function.
+    - log (list): This is where we store our logs so far.
+
+    Example:
+    --------
+    transaction_processing(index, data_base, DB_Log)
+    """
     id: int = int(transactions[indx][0]) #Grabs the id from the transaction list. This is the primary key in the database table. 
     attr = transactions[indx][1] #Grabs the attribute name from the transaction at the indx of the transaction
     newVal = transactions[indx][2] #Grabs the new value that will be added to the database from the transaction
@@ -102,11 +151,19 @@ def transaction_processing(indx: int, database: list, log: list):
 def read_file(file_name:str)->list:
     '''
     Read the contents of a CSV file line-by-line and return a list of lists
+
+    Parameters:
+    - file_name (string): The name of the file you want to read from
+
+    Returns:
+    - list: data from the file  where each element is a sub-list containing the elements on that line
+
+    Example:
+    ---------
+    read_file('Employees_DB_ADV.csv')
     '''
     data = []
-    #
     # one line at-a-time reading file
-    #
     with open(file_name, 'r') as reader:
     # Read and print the entire file line by line
         line = reader.readline()
@@ -135,6 +192,10 @@ def is_there_a_failure()->bool:
     return result
 
 def main():
+    '''
+    I had to correct a few unintentional behaviours in the original code, you'll see a counter to escape from the normal recording 
+    once all transactions have been recorded. Additionally, Failing before any transactions now properly calls recovery_script.
+    '''
     number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
@@ -173,8 +234,8 @@ def main():
     print("\nDB_log")
     for i in DB_Log:
         print(i)
-    print_to_CSV("log.csv", DB_Log)
-    print_to_CSV("Updated_Employees_DB_ADV.csv", data_base)
+    print_to_CSV(log_string, DB_Log)
+    print_to_CSV(database_string, data_base)
 
 
 main()
