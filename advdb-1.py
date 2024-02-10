@@ -34,7 +34,6 @@ def populate_loglist_failed(log:list, indx: int, database:list):
     '''
     This populates the DB_Log with the transactions that will not run after the failing transaction
     '''
-
     if indx == None:
         indx = 0
     while indx < len(transactions):
@@ -51,25 +50,26 @@ def populate_loglist_failed(log:list, indx: int, database:list):
     
 
 
-def recovery_script(log:list, indx: int, database:list):  #<--- Your CODE
+def recovery_script(log:list, indx: int, database:list):
     '''
     Restore the database to stable and sound condition, by processing the DB log.
     '''
     print("Calling your recovery script with DB_Log as an argument.")
     populate_loglist_failed(DB_Log, indx, database)
-    if(indx != None):
+    if(indx != None): #This was only added since the loop running the transaction kept running if there was never an error so this is not longer nessesary since we fixed that.
         print("Recovery in process ...\n")
-        log[indx - 1][6] = 'Rolledback'
+        log[indx - 1][6] = 'Rolledback' #adds the Rolledback tag to the log.
+        #Grabs info out of the log in main memory 
         id = int(log[indx - 1][1])
         attr = log[indx - 1][2]
-        print(attr)
         oldVal = log[indx - 1][3]
+
         col = 0
         for i in database[0]: #finds the col of the attribute to be updated
             if(i == attr):
                 break
             col += 1
-        database[id][col] = oldVal
+        database[id][col] = oldVal #Replaces the value in the main memory with the old value since the transaction failed.
     else:
         print("No Rollback nessesary.")
     
@@ -85,21 +85,16 @@ def print_to_CSV(fileName: str, array: list):
             writer.writerow([str(item) for item in row])
     pass
 
-def transaction_processing(indx: int, database: list, log: list): #<-- Your CODE
-    '''
-    1. Process transaction in the transaction queue.
-    2. Updates DB_Log accordingly
-    3. This function does NOT commit the updates, just execute them
-    '''
-    id: int = int(transactions[indx][0])
-    attr = transactions[indx][1]
-    newVal = transactions[indx][2]
-    col: int = 0
+def transaction_processing(indx: int, database: list, log: list):
+    id: int = int(transactions[indx][0]) #Grabs the id from the transaction list. This is the primary key in the database table. 
+    attr = transactions[indx][1] #Grabs the attribute name from the transaction at the indx of the transaction
+    newVal = transactions[indx][2] #Grabs the new value that will be added to the database from the transaction
+    col: int = 0 
     for i in database[0]: #finds the col of the attribute to be updated
-        if(i == attr):
+        if(i == attr):#if the attribute name is the same as the attribute we need to change it will exit the loop.
             break
         col += 1
-    log.append([indx, id, attr, database[id][col], newVal, current_time, "Committed"]) #assumes the transaction completes with no errors but the last value will change if the transaction fails
+    log.append([indx, id, attr, database[id][col], newVal, current_time, "Committed"]) #assumes the transaction completes with no errors but the last value will change if the transaction fails.
     database[id][col] = newVal #updates the database list in mainMemory (this will be changed if an error occurs during the transaction)
     pass
     
@@ -142,7 +137,7 @@ def is_there_a_failure()->bool:
 def main():
     number_of_transactions = len(transactions)
     must_recover = False
-    data_base = read_file('Employees_DB_ADV.csv') #If this is not reading from the file then I need to open the folder that the file is located in since vscode is a little stupid.
+    data_base = read_file('Employees_DB_ADV.csv')
     failure = is_there_a_failure()
     if failure:
         must_recover = True
@@ -152,7 +147,6 @@ def main():
         # Process transaction
         for index in range(number_of_transactions):
             print(f"\nProcessing transaction No. {index+1}.")   
-            #<--- Your CODE (Call function transaction_processing)
             transaction_processing(index, data_base, DB_Log)
             current_transaction_num += 1
             print("UPDATES have not been committed yet...\n")
