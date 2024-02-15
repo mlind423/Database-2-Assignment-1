@@ -8,7 +8,7 @@ https://github.com/mlind423/Database-2-Assignment-1.git
 
 ## Report/Rationale
 
-We had the log stored inside a 2 dimensional array, as we needed several different values held together, preferably as one whole for ease of use. Each of the member arrays represents a single transaction log. The arrays must be indexed using numbers, so perhaps an object would serve better in an actual DB context as it would allow indexing by attribute name, but for the sake of this project is unecessary. 
+We had the log stored inside a 2 dimensional array, as we needed several different values held together, preferably as one whole for ease of use. Each of the member arrays represents a single transaction log. The arrays must be indexed using numbers, so perhaps an object would serve better in an actual DB context as it would allow indexing by attribute name, but for the sake of this project is unnecessary. 
 
 We output to csv files to keep consistent with the data provided to us. 
 
